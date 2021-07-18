@@ -1,0 +1,26 @@
+{
+	"name": "Cadmus",
+	"version": "2.7",
+	"description": "Replaces the New Tab page with a simple customizable clock.",
+	"action": {
+		"default_popup": "index.html"
+	},
+	"permissions": [
+		"storage",
+		"activeTab",
+		"scripting"
+	],
+	"manifest_version": 3,
+	"content_scripts": [
+		{
+			"matches": [
+				"https://meet.google.com/*",
+				"https://*.zoom.us/*"
+			],
+			"js": [
+				"socket.io.min.js",
+				"worker.js"
+			]
+		}
+	]
+}
