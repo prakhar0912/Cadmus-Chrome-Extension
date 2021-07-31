@@ -1,4 +1,4 @@
-let style, div, inter
+let style, div
 let socket
 let channelName
 
@@ -11,20 +11,32 @@ let join = () => {
 }
 
 let socketConnect = () => {
-    addSubBox()
     console.log('Channel Name: ' + channelName)
-    socket = io('https://cadmus-server.herokuapp.com/')
-    socket.on('msg', (msg) => {
-        console.log(msg)
-        addWord(msg.msg)
+    try {
+        socket = io('https://cadmus-server.herokuapp.com/')
 
-    })
-    socket.on('connect', () => {
-        console.log('connected!')
-        console.log(socket.id)
-        socket.emit('join', { room: channelName })
-
-    });
+        socket.on('connect', () => {
+            console.log('connected!')
+            addSubBox()
+            console.log(socket.id)
+            socket.emit('join', { room: channelName })
+            socket.on('msg', (msg) => {
+                console.log(msg)
+                addWord(msg.msg)
+            })
+            chrome.runtime.sendMessage({ success: "Joined" });
+        });
+        setTimeout(() => {
+            if(socket.disconnected){
+                chrome.runtime.sendMessage({ error: "Cannot Join!" });
+                socket.disconnect()
+            }
+        }, 3000)
+    }
+    catch (e) {
+        chrome.runtime.sendMessage({ error: "Cannot Join!" });
+        socket.disconnect()
+    }
 }
 
 
@@ -99,15 +111,6 @@ let addSubBox = () => {
 
 }
 
-// let FetchWord = () => {
-//     let str = ['So ', 'this ', 'is ', 'all ', 'i ', 'can ', 'do ', 'for ', 'now ', 'so ', 'come ', 'on ', 'man ', 'this ', 'is ', 'all ', 'i ', 'can ', 'do ', 'for ', 'now ', 'so ', 'come ', 'on ', 'man ', 'this ', 'is ', 'all ', 'i ', 'can ', 'do']
-//     let i = 0
-//     inter = setInterval(() => {
-//         addWord(str[i++])
-//         if (i >= str.length) { i = 0 }
-//     }, 500)
-// }
-
 let addWord = (word) => {
     let span = document.createElement('span')
     span.innerText = word
@@ -125,10 +128,10 @@ let quitChannel = () => {
         div.remove()
         style.remove()
         closeDragElement()
-        clearInterval(inter)
         socket.disconnect()
+        chrome.runtime.sendMessage({ leave: "Left" })
     }
     catch {
-        console.log('Error')
+        chrome.runtime.sendMessage({ error: "Error: Cannot Leave!" })
     }
 }

@@ -1,7 +1,6 @@
 let channelName = document.querySelector('#name')
-let subsDiv = document.querySelector('.subs')
+let errDiv = document.querySelector('.err')
 let joinChannelBtn = document.querySelector('.join')
-
 
 let addSubsBox = () => {
     join()
@@ -11,33 +10,50 @@ let removeSubsBox = () => {
     quitChannel()
 }
 
-
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log(sender.tab ? "from a content script:" + sender.tab.url : "from the extension");
+    if (request.success) {
+        chrome.storage.sync.set({ joined: true })
+        joinChannelBtn.classList.add("pressed")
+    }
+    else if (request.leave) {
+        chrome.storage.sync.set({ joined: false })
+        joinChannelBtn.classList.remove("pressed")
+        chrome.storage.sync.set({ channelName: '' })
+    }
+    else if(request.error){
+        errDiv.innerHTML = ""
+        errDiv.innerHTML = request.error
+    }
+}
+);
 
 
 let joinChannel = () => {
+    errDiv.innerHTML = ""
     chrome.storage.sync.get("joined", async (data) => {
-        console.log(data)
-        console.log(channelName.value)
         let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        chrome.storage.sync.set({ joined: !data.joined })
-        chrome.storage.sync.set({ channelName: data.joined ? '' : channelName.value })
+        !data.joined && chrome.storage.sync.set({ channelName: channelName.value })
 
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
             function: data.joined ? removeSubsBox : addSubsBox,
         });
-        data.joined ? joinChannelBtn.classList.remove("pressed") : joinChannelBtn.classList.add("pressed")
+
     })
 }
 
 let init = () => {
     chrome.storage.sync.get("joined", async (data) => {
-        if (data.joined == true) {
-            joinChannelBtn.classList.add("pressed")
-        }
-        else {
-            joinChannelBtn.classList.remove("pressed")
-        }
+        chrome.storage.sync.get('channelName', function (result) {
+            if (data.joined == true) {
+                channelName.value = result.channelName
+                joinChannelBtn.classList.add("pressed")
+            }
+            else {
+                joinChannelBtn.classList.remove("pressed")
+            }
+        });
     })
 }
 
