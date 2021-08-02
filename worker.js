@@ -3,6 +3,8 @@ let socket
 let channelName
 
 
+
+
 let join = () => {
     chrome.storage.sync.get(['channelName'], function (result) {
         channelName = result.channelName
@@ -113,7 +115,7 @@ let addSubBox = () => {
 
 let addWord = (word) => {
     let span = document.createElement('span')
-    span.innerText = word
+    span.innerText = word + " "
     div.appendChild(span)
 }
 
@@ -132,6 +134,6 @@ let quitChannel = () => {
         chrome.runtime.sendMessage({ leave: "Left" })
     }
     catch {
-        chrome.runtime.sendMessage({ error: "Error: Cannot Leave!" })
+        chrome.runtime.sendMessage({ error: "Error: Cannot Leave! <a id='force'>Force Leave</a>", spc: true })
     }
 }

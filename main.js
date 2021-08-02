@@ -10,6 +10,12 @@ let removeSubsBox = () => {
     quitChannel()
 }
 
+let force = () => {
+    chrome.storage.sync.set({ joined: false })
+    joinChannelBtn.classList.remove("pressed")
+    chrome.storage.sync.set({ channelName: '' })
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(sender.tab ? "from a content script:" + sender.tab.url : "from the extension");
     if (request.success) {
@@ -21,9 +27,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         joinChannelBtn.classList.remove("pressed")
         chrome.storage.sync.set({ channelName: '' })
     }
-    else if(request.error){
+    else if (request.error) {
         errDiv.innerHTML = ""
         errDiv.innerHTML = request.error
+        if(request.spc){
+            document.querySelector('#force').addEventListener('click', force)
+        }
     }
 }
 );
